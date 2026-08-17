@@ -1,0 +1,38 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$package = dirname(__DIR__);
+$project = getcwd() ?: '.';
+$composer = $package . '/vendor/autoload.php';
+if (is_file($composer)) {
+    require $composer;
+} else {
+    require $package . '/tests/bootstrap.php';
+    $mongoSource = dirname($package) . '/phpaml-data-mongodb/src/';
+    if (is_dir($mongoSource)) {
+        spl_autoload_register(static function (string $class) use ($mongoSource): void {
+            $prefix = 'AML\\Data\\MongoDB\\';
+            if (str_starts_with($class, $prefix)) require $mongoSource . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+        });
+    }
+}
+$projectAutoload = $project . '/runtime/autoload.php';
+if (is_file($projectAutoload)) {
+    require_once $projectAutoload;
+}
+$configPath = $project . '/configs/data.php';
+$config = is_file($configPath) ? require $configPath : ['database' => 'runtime/storage/app.sqlite'];
+if (!is_array($config)) {
+    fwrite(STDERR, "Erreur : configs/data.php doit retourner un tableau.\n");
+    exit(1);
+}
+try {
+    $arguments = array_slice($_SERVER['argv'] ?? [], 1);
+    $command = array_shift($arguments) ?? 'data:doctor';
+    exit((new AML\Data\Commands\DataCommand($project, $config))->run($command, $arguments));
+} catch (Throwable $error) {
+    fwrite(STDERR, 'Erreur : ' . $error->getMessage() . PHP_EOL);
+    exit(1);
+}
