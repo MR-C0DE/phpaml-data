@@ -38,7 +38,7 @@ final readonly class ProjectScaffolder
             $manifest = json_decode((string) file_get_contents($manifestPath), true);
             if (!is_array($manifest)) throw new RuntimeException('Le manifeste PHPAML est invalide.');
             $manifest['modules'] = is_array($manifest['modules'] ?? null) ? $manifest['modules'] : [];
-            $manifest['modules']['data'] = ['version' => '0.1.0-dev', 'driver' => $driver];
+            $manifest['modules']['data'] = ['version' => '0.1.0-alpha.2', 'driver' => $driver];
             if ($driver === 'mongodb') $manifest['modules']['data-mongodb'] = ['version' => '0.1.0-alpha.1'];
             file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL);
             $changes[] = basename($manifestPath);

@@ -5,10 +5,14 @@ declare(strict_types=1);
 
 $package = dirname(__DIR__);
 $project = getcwd() ?: '.';
+$projectAutoload = $project . '/runtime/autoload.php';
+if (is_file($projectAutoload)) {
+    require_once $projectAutoload;
+}
 $composer = $package . '/vendor/autoload.php';
-if (is_file($composer)) {
+if (!class_exists(AML\Data\Commands\DataCommand::class) && is_file($composer)) {
     require $composer;
-} else {
+} elseif (!class_exists(AML\Data\Commands\DataCommand::class)) {
     require $package . '/tests/bootstrap.php';
     $mongoSource = dirname($package) . '/phpaml-data-mongodb/src/';
     if (is_dir($mongoSource)) {
@@ -17,10 +21,6 @@ if (is_file($composer)) {
             if (str_starts_with($class, $prefix)) require $mongoSource . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
         });
     }
-}
-$projectAutoload = $project . '/runtime/autoload.php';
-if (is_file($projectAutoload)) {
-    require_once $projectAutoload;
 }
 $configPath = $project . '/configs/data.php';
 $config = is_file($configPath) ? require $configPath : ['database' => 'runtime/storage/app.sqlite'];

@@ -192,7 +192,7 @@ $mysql = new Connection('mysql:host=localhost;dbname=app', 'user', 'password');
 $postgres = new Connection('pgsql:host=localhost;dbname=app', 'user', 'password');
 ```
 
-Ces deux moteurs restent expérimentaux tant que leur matrice d'intégration sur serveurs réels n'est pas en place.
+Ces moteurs sont couverts par la matrice d'intégration sur serveurs réels.
 
 ## Matrice d'intégration SQL
 
@@ -218,7 +218,7 @@ Les paramètres dont le nom contient `password`, `secret`, `token`, `api_key`, `
 
 ## Validation multi-environnement
 
-La procédure [qa/README.md](qa/README.md) démarre MySQL 8.4, MariaDB 11.4, PostgreSQL 17 et MongoDB 8 en replica set. Le workflow local `.github/workflows/ci.yml` couvre PHP 8.2, 8.3 et 8.4 et ne contient aucune publication.
+La procédure [qa/README.md](qa/README.md) démarre MySQL 8.4, MariaDB 11.4, PostgreSQL 17 et MongoDB 8.2 en replica set. Le workflow `.github/workflows/ci.yml` couvre PHP 8.2, 8.3 et 8.4.
 
 Des smoke tests valident aussi l'installation dans une application PHPAML classique, une application AML View et un projet PHP autonome.
 
@@ -271,8 +271,8 @@ database/
 
 ## Portée actuelle
 
-Disponible dans le prototype : entités, attributs `Table`, `Column` et `Key`, `DbContext`, `DbSet`, CRUD, `where`, `orderBy`, `limit`, `first`, `find`, `count`, pagination, transactions et diagnostic des requêtes.
+Disponible dans cette version alpha : entités, attributs `Table`, `Column` et `Key`, `DbContext`, `DbSet`, CRUD, `where`, `orderBy`, `limit`, `first`, `find`, `count`, pagination, transactions et diagnostic des requêtes.
 
-La validation (`Required`, `Email`, `Length`), les quatre relations principales, `with()`, le suivi automatique, `saveChanges()`, les migrations SQLite par lots, les rollbacks, les statuts, les seeders transactionnels et les commandes `data:migrate`, `data:rollback`, `data:seed`, `data:status` et `data:doctor` font également partie du prototype.
+La validation (`Required`, `Email`, `Length`), les quatre relations principales, `with()`, le suivi automatique, `saveChanges()`, les migrations par lots, les rollbacks, les statuts, les seeders transactionnels et les commandes `data:migrate`, `data:rollback`, `data:seed`, `data:status` et `data:doctor` font également partie de l'alpha.
 
-L'installation automatisée et les autres moteurs sont définis dans `docs/ARCHITECTURE.md`, mais ne font pas encore partie du noyau exécutable.
+L'installation automatisée est disponible via `aml install data`, avec sélection du pilote par `--driver`.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.2 — 2026-08-17
+
+- manifeste d'installation aligné sur la version publiée;
+- exécutable AML compatible avec l'autoload Composer du projet;
+- documentation actualisée après la validation multi-SGBD.
+
 ## 0.1.0-alpha.1 — 2026-08-17
 
 - noyau typé `Entity`, `DbContext` et `DbSet`;
