@@ -119,6 +119,26 @@ $test('CRUD typé, requêtes chaînables et pagination SQLite', function () use 
     $expect(count($logger->queries) >= 8 && $logger->queries[0]->durationMilliseconds >= 0, 'Le diagnostic des requêtes est absent.');
 });
 
+$test("l'identifiant SQL explicite reste identique dans l'objet et la base", function () use ($expect): void {
+    $connection = Connection::sqlite();
+    $connection->pdo()->exec('CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL)');
+    $context = new TestContext($connection);
+    $user = new User();
+    $user->id = 42; $user->name = 'Manual'; $user->email = 'manual@example.test';
+    $context->users()->add($user);
+    $stored = $context->users()->find(42);
+    $expect($user->id === 42 && $stored instanceof User && $stored->id === 42, "L'identité SQL explicite n'a pas été conservée.");
+});
+
+$test('une mise à jour sans champ ne produit pas de SQL invalide', function () use ($expect): void {
+    $connection = Connection::sqlite();
+    $connection->pdo()->exec('CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT)');
+    $context = new TestContext($connection);
+    $user = new User(); $user->id = 42;
+    $context->users()->update($user);
+    $expect(true, 'La mise à jour vide doit être une opération sans effet.');
+});
+
 $test('une transaction en erreur est annulée', function () use ($expect): void {
     $connection = Connection::sqlite();
     $connection->pdo()->exec('CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL)');
