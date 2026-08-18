@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.3 — 2026-08-17
+
+- conservation cohérente des identifiants SQL explicitement initialisés ;
+- mise à jour vide traitée sans produire de requête SQL invalide ;
+- tests d’identité et de persistance renforcés.
+
 ## 0.1.0-alpha.2 — 2026-08-17
 
 - manifeste d'installation aligné sur la version publiée;

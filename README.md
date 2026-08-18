@@ -2,7 +2,7 @@
 
 Couche de données typée et indépendante pour PHPAML, AML View et les projets PHP 8.2+.
 
-> État : `0.1.0-alpha.1`. SQLite, MySQL, MariaDB et PostgreSQL sont validés par intégration réelle. PHPStan passe au niveau maximal.
+> État : `0.1.0-alpha.3`. SQLite, MySQL, MariaDB et PostgreSQL sont validés par intégration réelle. PHPStan passe au niveau maximal.
 
 ```bash
 composer require phpaml/data:^0.1@alpha

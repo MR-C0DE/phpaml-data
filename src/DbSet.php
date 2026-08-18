@@ -157,16 +157,17 @@ final class DbSet
     public function add(Entity $entity): Entity
     {
         (new EntityValidator())->validate($entity);
-        $data = $this->metadata->extract($entity, false);
+        $keyProperty = $this->metadata->properties[$this->metadata->key];
+        $hasExplicitKey = $keyProperty->isInitialized($entity);
+        $data = $this->metadata->extract($entity, $hasExplicitKey);
         $columns = array_keys($data);
         $placeholders = array_map(static fn (string $column): string => ':' . $column, $columns);
-        $keyProperty = $this->metadata->properties[$this->metadata->key];
-        $returning = !$keyProperty->isInitialized($entity) ? $this->connection->dialect()->insertReturning($this->metadata->key) : '';
+        $returning = !$hasExplicitKey ? $this->connection->dialect()->insertReturning($this->metadata->key) : '';
         $statement = $this->connection->execute(
             'INSERT INTO ' . $this->quote($this->metadata->table) . ' (' . implode(', ', array_map($this->quote(...), $columns)) . ') VALUES (' . implode(', ', $placeholders) . ')' . $returning,
             array_combine($placeholders, array_values($data)) ?: [],
         );
-        if (!$keyProperty->isInitialized($entity)) {
+        if (!$hasExplicitKey) {
             $generated = $returning === '' ? $this->connection->pdo()->lastInsertId() : $statement->fetchColumn();
             $keyProperty->setValue($entity, is_numeric($generated) ? (int) $generated : $generated);
         }
@@ -176,12 +177,15 @@ final class DbSet
     /** @param T $entity */
     public function update(Entity $entity): void
     {
-        (new EntityValidator())->validate($entity);
         $data = $this->metadata->extract($entity, false);
         $keyProperty = $this->metadata->properties[$this->metadata->key];
         if (!$keyProperty->isInitialized($entity)) {
             throw new InvalidArgumentException("Impossible de modifier une entité sans clé.");
         }
+        if ($data === []) {
+            return;
+        }
+        (new EntityValidator())->validate($entity);
         $sets = array_map(fn (string $column): string => $this->quote($column) . " = :{$column}", array_keys($data));
         $parameters = [];
         foreach ($data as $column => $value) {
