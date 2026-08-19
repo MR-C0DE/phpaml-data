@@ -390,7 +390,7 @@ $test("l'installateur et les générateurs préparent un projet sans écraser", 
     $seeder = $scaffolder->seeder('User');
     $expect($model === 'src/models/User.php' && str_contains((string) file_get_contents($root . '/' . $model), 'extends Entity'), 'Le modèle généré est incorrect.');
     $expect(str_contains($migration, 'create_users_table') && str_contains((string) file_get_contents($root . '/' . $migration), "create('users'"), 'La migration générée est incorrecte.');
-    $expect($seeder === 'database/seeders/UserSeeder.php' && str_contains((string) file_get_contents($root . '/' . $seeder), 'implements Seeder'), 'Le seeder généré est incorrect.');
+    $expect($seeder === 'runtime/database/seeders/UserSeeder.php' && str_contains((string) file_get_contents($root . '/' . $seeder), 'implements Seeder'), 'Le seeder généré est incorrect.');
     $manifest = json_decode((string) file_get_contents($root . '/phpaml.json'), true, 512, JSON_THROW_ON_ERROR);
     $expect(($manifest['modules']['data']['driver'] ?? null) === 'pgsql', "Le pilote du manifeste n'a pas été actualisé.");
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);

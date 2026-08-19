@@ -110,8 +110,8 @@ Le CLI doit découvrir un fournisseur de commandes livré par le module, plutôt
         ],
     ],
     'models_path' => dirname(__DIR__) . '/src/models',
-    'migrations_path' => dirname(__DIR__) . '/database/migrations',
-    'seeders_path' => dirname(__DIR__) . '/database/seeders',
+    'migrations_path' => dirname(__DIR__) . '/runtime/database/migrations',
+    'seeders_path' => dirname(__DIR__) . '/runtime/database/seeders',
 ];
 ```
 

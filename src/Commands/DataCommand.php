@@ -216,7 +216,7 @@ final class DataCommand
     private function migrationsPath(): string
     {
         $connection = $this->manager->configuration($this->connectionName);
-        $configured = $connection['migrations_path'] ?? $this->manager->rootConfiguration()['migrations_path'] ?? 'database/migrations';
+        $configured = $connection['migrations_path'] ?? $this->manager->rootConfiguration()['migrations_path'] ?? 'runtime/database/migrations';
         if (!is_string($configured)) throw new RuntimeException('migrations_path doit être une chaîne.');
         $path = $configured;
         return str_starts_with($path, '/') ? $path : $this->root . '/' . ltrim($path, '/');

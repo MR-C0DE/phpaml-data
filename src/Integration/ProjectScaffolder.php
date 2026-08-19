@@ -21,7 +21,7 @@ final readonly class ProjectScaffolder
             throw new InvalidArgumentException("Pilote inconnu : {$driver}");
         }
         $changes = [];
-        foreach (['src/models', 'src/Data', 'database/migrations', 'database/seeders', 'runtime/storage'] as $directory) {
+        foreach (['src/models', 'src/Data', 'runtime/database/migrations', 'runtime/database/seeders', 'runtime/storage'] as $directory) {
             $path = $this->root . '/' . $directory;
             if (!is_dir($path) && !mkdir($path, 0755, true) && !is_dir($path)) {
                 throw new RuntimeException("Impossible de créer {$directory}.");
@@ -71,7 +71,7 @@ final readonly class ProjectScaffolder
     {
         $slug = $this->snake($name);
         if ($slug === '') throw new InvalidArgumentException('Le nom de migration est invalide.');
-        $path = 'database/migrations/' . date('YmdHis') . "_{$slug}.php";
+        $path = 'runtime/database/migrations/' . date('YmdHis') . "_{$slug}.php";
         $table = preg_match('/^create_(.+)_table$/', $slug, $match) ? $match[1] : 'table_name';
         $content = "<?php\n\ndeclare(strict_types=1);\n\nuse AML\\Data\\Connection;\nuse AML\\Data\\Migrations\\Migration;\nuse AML\\Data\\Schema\\{Schema, Table};\n\nreturn new class extends Migration {\n    public function up(Connection \$connection): void\n    {\n        (new Schema(\$connection))->create('{$table}', function (Table \$table): void {\n            \$table->id();\n            \$table->timestamps();\n        });\n    }\n\n    public function down(Connection \$connection): void\n    {\n        (new Schema(\$connection))->dropIfExists('{$table}');\n    }\n};\n";
         return $this->writeNew($path, $content);
@@ -80,7 +80,7 @@ final readonly class ProjectScaffolder
     public function seeder(string $name): string
     {
         $class = $this->className($name, 'Seeder');
-        $path = "database/seeders/{$class}.php";
+        $path = "runtime/database/seeders/{$class}.php";
         $content = "<?php\n\ndeclare(strict_types=1);\n\nnamespace Database\\Seeders;\n\nuse AML\\Data\\DbContext;\nuse AML\\Data\\Seeding\\Seeder;\n\nfinal class {$class} implements Seeder\n{\n    public function seed(DbContext \$context): void\n    {\n        // Ajoutez vos données initiales ici.\n    }\n}\n";
         return $this->writeNew($path, $content);
     }
@@ -88,7 +88,7 @@ final readonly class ProjectScaffolder
     private function configTemplate(string $driver): string
     {
         $database = $driver === 'sqlite' ? 'runtime/storage/app.sqlite' : 'app';
-        return "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'default' => getenv('DATA_CONNECTION') ?: 'main',\n    'connections' => [\n        'main' => [\n            'driver' => getenv('DATA_DRIVER') ?: '{$driver}',\n            'dsn' => getenv('DATA_DSN') ?: null,\n            'database' => getenv('DATA_DATABASE') ?: '{$database}',\n            'host' => getenv('DATA_HOST') ?: '127.0.0.1',\n            'port' => getenv('DATA_PORT') ?: null,\n            'username' => getenv('DATA_USERNAME') ?: null,\n            'password' => getenv('DATA_PASSWORD') ?: null,\n            'uri' => getenv('DATA_URI') ?: null,\n        ],\n    ],\n    'migrations_path' => dirname(__DIR__) . '/database/migrations',\n    'models_path' => dirname(__DIR__) . '/src/models',\n    'seeders' => [],\n];\n";
+        return "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'default' => getenv('DATA_CONNECTION') ?: 'main',\n    'connections' => [\n        'main' => [\n            'driver' => getenv('DATA_DRIVER') ?: '{$driver}',\n            'dsn' => getenv('DATA_DSN') ?: null,\n            'database' => getenv('DATA_DATABASE') ?: '{$database}',\n            'host' => getenv('DATA_HOST') ?: '127.0.0.1',\n            'port' => getenv('DATA_PORT') ?: null,\n            'username' => getenv('DATA_USERNAME') ?: null,\n            'password' => getenv('DATA_PASSWORD') ?: null,\n            'uri' => getenv('DATA_URI') ?: null,\n        ],\n    ],\n    'migrations_path' => dirname(__DIR__) . '/runtime/database/migrations',\n    'models_path' => dirname(__DIR__) . '/src/models',\n    'seeders' => [],\n];\n";
     }
 
     private function writeNew(string $relative, string $content): string

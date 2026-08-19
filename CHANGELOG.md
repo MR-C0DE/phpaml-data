@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.4 — 2026-08-19
+
+- déplace migrations et seeders dans `runtime/database/` ;
+- met à jour l’installateur, les générateurs, la configuration et les tests ;
+- garde la base SQLite dans `runtime/storage/database.sqlite`.
+
 ## 0.1.0-alpha.3 — 2026-08-17
 
 - conservation cohérente des identifiants SQL explicitement initialisés ;
