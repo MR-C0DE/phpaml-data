@@ -2,7 +2,7 @@
 
 Couche de données typée et indépendante pour PHPAML, AML View et les projets PHP 8.2+.
 
-> État : `0.1.0-alpha.3`. SQLite, MySQL, MariaDB et PostgreSQL sont validés par intégration réelle. PHPStan passe au niveau maximal.
+> État : `0.1.0-alpha.4`. SQLite, MySQL, MariaDB et PostgreSQL sont validés par intégration réelle. PHPStan passe au niveau maximal.
 
 ```bash
 composer require phpaml/data:^0.1@alpha
@@ -105,7 +105,7 @@ aml make:migration create_users_table
 aml make:seeder UserSeeder
 ```
 
-L'installation prépare `configs/data.php`, `src/models/`, `src/Data/`, `database/migrations/`, `database/seeders/` et le stockage SQLite, puis enregistre le module dans `phpaml.json` ou `info.json`. Elle ne remplace jamais un `configs/data.php` existant.
+L'installation prépare `configs/data.php`, `src/models/`, `src/Data/`, `runtime/database/migrations/`, `runtime/database/seeders/` et le stockage SQLite, puis enregistre le module dans `phpaml.json` ou `info.json`. Elle ne remplace jamais un `configs/data.php` existant.
 
 Les modèles générés étendent `AML\Data\Entity`. Les migrations utilisent `Schema` et `Table`; les seeders implémentent `AML\Data\Seeding\Seeder`.
 
