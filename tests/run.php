@@ -331,14 +331,16 @@ $test('le constructeur de schéma crée des tables SQLite typées', function () 
 
 $test('les dialectes compilent identifiants, clés et types propres au SGBD', function () use ($expect): void {
     $sqlite = new SchemaTable('users', new SqliteDialect());
-    $sqlite->id(); $sqlite->boolean('active');
+    $sqlite->id(); $sqlite->boolean('active'); $sqlite->decimal('price');
     $mysql = new SchemaTable('users', new MySqlDialect());
-    $mysql->id(); $mysql->boolean('active');
+    $mysql->id(); $mysql->boolean('active'); $mysql->decimal('price');
     $postgres = new SchemaTable('users', new PostgresDialect());
-    $postgres->id(); $postgres->boolean('active')->default(true);
+    $postgres->id(); $postgres->boolean('active')->default(true); $postgres->decimal('price');
     $expect(str_contains($sqlite->toSql(), '"id" INTEGER PRIMARY KEY AUTOINCREMENT'), 'La clé SQLite est incorrecte.');
+    $expect(str_contains($sqlite->toSql(), 'DECIMAL(10,2)'), 'Le type décimal SQLite est absent.');
     $expect(str_contains($mysql->toSql(), '`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY') && str_contains($mysql->toSql(), 'TINYINT(1)'), 'Le dialecte MySQL est incorrect.');
     $expect(str_contains($postgres->toSql(), '"id" BIGSERIAL PRIMARY KEY') && str_contains($postgres->toSql(), 'BOOLEAN NOT NULL DEFAULT TRUE'), 'Le dialecte PostgreSQL est incorrect.');
+    $expect(str_contains($mysql->toSql(), 'DECIMAL(10,2)') && str_contains($postgres->toSql(), 'NUMERIC(10,2)'), 'Les types décimaux SQL sont incorrects.');
     $expect((new PostgresDialect())->insertReturning('id') === ' RETURNING "id"', 'RETURNING PostgreSQL est absent.');
     $expect((new Connection('mysql:host=localhost'))->dialect()->name() === 'mysql', 'La détection MySQL a échoué.');
     $expect((new Connection('pgsql:host=localhost'))->dialect()->name() === 'pgsql', 'La détection PostgreSQL a échoué.');
@@ -377,14 +379,16 @@ $test('ConnectionManager sélectionne les connexions et accepte des adaptateurs'
 $test("l'installateur et les générateurs préparent un projet sans écraser", function () use ($expect): void {
     $root = sys_get_temp_dir() . '/phpaml-data-project-' . bin2hex(random_bytes(5));
     mkdir($root, 0755, true);
-    file_put_contents($root . '/phpaml.json', json_encode(['name' => 'test', 'modules' => []], JSON_THROW_ON_ERROR));
+    file_put_contents($root . '/phpaml.json', json_encode(['name' => 'test', 'application' => ['type' => 'api'], 'modules' => []], JSON_THROW_ON_ERROR));
     file_put_contents($root . '/composer.json', json_encode(['autoload' => ['psr-4' => ['App\\' => 'src/']]], JSON_THROW_ON_ERROR));
     $scaffolder = new ProjectScaffolder($root);
     $changes = $scaffolder->install('sqlite');
-    $expect(in_array('configs/data.php', $changes, true) && is_dir($root . '/src/models'), "L'installation est incomplète.");
-    $originalConfig = file_get_contents($root . '/configs/data.php');
+    $manifest = json_decode((string) file_get_contents($root . '/phpaml.json'), true, 512, JSON_THROW_ON_ERROR);
+    $expect(in_array('phpaml.json', $changes, true) && isset($manifest['data']) && is_dir($root . '/src/models'), "L'installation est incomplète.");
+    $originalConfig = $manifest['data'];
     $scaffolder->install('pgsql');
-    $expect(file_get_contents($root . '/configs/data.php') === $originalConfig, 'La configuration existante a été écrasée.');
+    $manifest = json_decode((string) file_get_contents($root . '/phpaml.json'), true, 512, JSON_THROW_ON_ERROR);
+    $expect(($manifest['data'] ?? null) === $originalConfig, 'La configuration existante a été écrasée.');
     $model = $scaffolder->model('User');
     $migration = $scaffolder->migration('create_users_table');
     $seeder = $scaffolder->seeder('User');

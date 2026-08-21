@@ -52,6 +52,19 @@ final class AlterTable
         $this->operations[] = function () use ($sql): void { $this->connection->pdo()->exec($sql); };
     }
 
+    public function dropIndexIfExists(string $name): void
+    {
+        Column::identifier($name);
+        $sql = $this->connection->dialect()->name() === 'mysql'
+            ? 'DROP INDEX ' . $this->q($name) . ' ON ' . $this->q($this->table)
+            : 'DROP INDEX IF EXISTS ' . $this->q($name);
+        $this->operations[] = function () use ($sql): void {
+            try { $this->connection->pdo()->exec($sql); } catch (\PDOException $exception) {
+                if ($this->connection->dialect()->name() !== 'mysql' || !in_array((string) $exception->getCode(), ['42000', '1091'], true)) { throw $exception; }
+            }
+        };
+    }
+
     public function apply(): void
     {
         foreach ($this->operations as $operation) $operation();

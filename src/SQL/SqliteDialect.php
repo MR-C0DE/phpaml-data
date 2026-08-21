@@ -15,7 +15,7 @@ final class SqliteDialect extends AbstractDialect
     {
         return match ($type) {
             'string' => 'VARCHAR(' . $this->length($length) . ')',
-            'text' => 'TEXT', 'integer', 'boolean' => 'INTEGER', 'datetime' => 'DATETIME',
+            'text' => 'TEXT', 'integer', 'boolean' => 'INTEGER', 'decimal' => 'DECIMAL(10,2)', 'datetime' => 'DATETIME',
             default => throw new InvalidArgumentException("Type inconnu : {$type}"),
         };
     }

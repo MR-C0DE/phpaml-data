@@ -105,7 +105,11 @@ aml make:migration create_users_table
 aml make:seeder UserSeeder
 ```
 
-L'installation prépare `configs/data.php`, `src/models/`, `src/Data/`, `runtime/database/migrations/`, `runtime/database/seeders/` et le stockage SQLite, puis enregistre le module dans `phpaml.json` ou `info.json`. Elle ne remplace jamais un `configs/data.php` existant.
+Dans un projet moderne, l'installation prépare `src/models/`, `src/Data/`,
+`runtime/database/migrations/`, `runtime/database/seeders/` et le stockage
+SQLite, puis écrit la configuration dans la section `data` de `phpaml.json`.
+Un ancien projet sans section `application` conserve automatiquement
+`configs/data.php` pour assurer sa compatibilité.
 
 Les modèles générés étendent `AML\Data\Entity`. Les migrations utilisent `Schema` et `Table`; les seeders implémentent `AML\Data\Seeding\Seeder`.
 
