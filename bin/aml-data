@@ -23,9 +23,18 @@ if (!class_exists(AML\Data\Commands\DataCommand::class) && is_file($composer)) {
     }
 }
 $configPath = $project . '/configs/data.php';
-$config = is_file($configPath) ? require $configPath : ['database' => 'runtime/storage/app.sqlite'];
+$manifestPath = $project . '/phpaml.json';
+$manifest = is_file($manifestPath) ? json_decode((string) file_get_contents($manifestPath), true) : null;
+if (is_array($manifest['data'] ?? null) && class_exists(PHPAML\Config\ApplicationConfig::class)) {
+    $applicationConfig = PHPAML\Config\ApplicationConfig::load($project);
+    $config = $applicationConfig['data'] ?? $manifest['data'];
+} else {
+    $config = is_array($manifest['data'] ?? null)
+        ? $manifest['data']
+        : (is_file($configPath) ? require $configPath : ['database' => 'runtime/storage/app.sqlite']);
+}
 if (!is_array($config)) {
-    fwrite(STDERR, "Erreur : configs/data.php doit retourner un tableau.\n");
+    fwrite(STDERR, "Erreur : la configuration Data est invalide.\n");
     exit(1);
 }
 try {

@@ -12,7 +12,9 @@ $legacy = new PHPAML\Data\Connection($dsn, $user, $password);
 $connection = AML\Data\Compatibility\LegacyConnectionAdapter::adapt($legacy);
 ```
 
-Pour un nouveau projet, préférez directement `ConnectionManager` et `configs/data.php`.
+Pour un nouveau projet, préférez directement `ConnectionManager` et la section
+`data` de `phpaml.json`. Les valeurs sensibles ou propres à l'environnement
+restent dans `.env`.
 
 ## Requêtes
 

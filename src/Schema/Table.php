@@ -33,6 +33,7 @@ final class Table
     public function text(string $name): Column { return $this->add(new Column($name, 'text')); }
     public function integer(string $name): Column { return $this->add(new Column($name, 'integer')); }
     public function boolean(string $name): Column { return $this->add(new Column($name, 'boolean')); }
+    public function decimal(string $name): Column { return $this->add(new Column($name, 'decimal')); }
     public function dateTime(string $name): Column { return $this->add(new Column($name, 'datetime')); }
 
     public function foreignId(string $name): Column

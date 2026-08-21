@@ -12,10 +12,11 @@ mkdir($root, 0755, true);
 $failed = 0;
 foreach (['classic' => [], 'view' => ['view' => ['version' => 'test']]] as $type => $modules) {
     $project = $root . '/' . $type; mkdir($project, 0755, true);
-    file_put_contents($project . '/phpaml.json', json_encode(['name' => $type, 'modules' => $modules], JSON_THROW_ON_ERROR));
+    file_put_contents($project . '/phpaml.json', json_encode(['name' => $type, 'application' => ['type' => $type], 'modules' => $modules], JSON_THROW_ON_ERROR));
     try {
         (new ProjectScaffolder($project))->install('sqlite');
-        $config = require $project . '/configs/data.php';
+        $manifest = json_decode((string) file_get_contents($project . '/phpaml.json'), true, 512, JSON_THROW_ON_ERROR);
+        $config = $manifest['data'];
         $connection = (new ConnectionManager($project, $config))->sql();
         $connection->pdo()->query('SELECT 1');
         echo "✓ projet PHPAML {$type}.\n";

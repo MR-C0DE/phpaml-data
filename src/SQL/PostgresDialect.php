@@ -20,7 +20,7 @@ final class PostgresDialect extends AbstractDialect
     {
         return match ($type) {
             'string' => 'VARCHAR(' . $this->length($length) . ')',
-            'text' => 'TEXT', 'integer' => 'BIGINT', 'boolean' => 'BOOLEAN', 'datetime' => 'TIMESTAMP',
+            'text' => 'TEXT', 'integer' => 'BIGINT', 'boolean' => 'BOOLEAN', 'decimal' => 'NUMERIC(10,2)', 'datetime' => 'TIMESTAMP',
             default => throw new InvalidArgumentException("Type inconnu : {$type}"),
         };
     }

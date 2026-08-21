@@ -27,21 +27,25 @@ final readonly class ProjectScaffolder
                 throw new RuntimeException("Impossible de créer {$directory}.");
             }
         }
-        $configPath = $this->root . '/configs/data.php';
-        if (!is_file($configPath)) {
-            if (!is_dir(dirname($configPath))) mkdir(dirname($configPath), 0755, true);
-            file_put_contents($configPath, $this->configTemplate($driver));
-            $changes[] = 'configs/data.php';
-        }
         $manifestPath = is_file($this->root . '/phpaml.json') ? $this->root . '/phpaml.json' : $this->root . '/info.json';
         if (is_file($manifestPath)) {
             $manifest = json_decode((string) file_get_contents($manifestPath), true);
             if (!is_array($manifest)) throw new RuntimeException('Le manifeste PHPAML est invalide.');
             $manifest['modules'] = is_array($manifest['modules'] ?? null) ? $manifest['modules'] : [];
-            $manifest['modules']['data'] = ['version' => '0.1.0-alpha.3', 'driver' => $driver];
-            if ($driver === 'mongodb') $manifest['modules']['data-mongodb'] = ['version' => '0.1.0-alpha.3'];
+            $manifest['modules']['data'] = ['version' => '0.2.0-alpha.1', 'driver' => $driver];
+            if ($driver === 'mongodb') $manifest['modules']['data-mongodb'] = ['version' => '0.1.0-alpha.4'];
+            if (isset($manifest['application']) && !isset($manifest['data'])) {
+                $manifest['data'] = $this->declarativeConfig($driver);
+            }
             file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL);
             $changes[] = basename($manifestPath);
+        } else {
+            $configPath = $this->root . '/configs/data.php';
+            if (!is_file($configPath)) {
+                if (!is_dir(dirname($configPath))) mkdir(dirname($configPath), 0755, true);
+                file_put_contents($configPath, $this->configTemplate($driver));
+                $changes[] = 'configs/data.php';
+            }
         }
         $composerPath = $this->root . '/composer.json';
         if (is_file($composerPath)) {
@@ -89,6 +93,29 @@ final readonly class ProjectScaffolder
     {
         $database = $driver === 'sqlite' ? 'runtime/storage/app.sqlite' : 'app';
         return "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'default' => getenv('DATA_CONNECTION') ?: 'main',\n    'connections' => [\n        'main' => [\n            'driver' => getenv('DATA_DRIVER') ?: '{$driver}',\n            'dsn' => getenv('DATA_DSN') ?: null,\n            'database' => getenv('DATA_DATABASE') ?: '{$database}',\n            'host' => getenv('DATA_HOST') ?: '127.0.0.1',\n            'port' => getenv('DATA_PORT') ?: null,\n            'username' => getenv('DATA_USERNAME') ?: null,\n            'password' => getenv('DATA_PASSWORD') ?: null,\n            'uri' => getenv('DATA_URI') ?: null,\n        ],\n    ],\n    'migrations_path' => dirname(__DIR__) . '/runtime/database/migrations',\n    'models_path' => dirname(__DIR__) . '/src/models',\n    'seeders' => [],\n];\n";
+    }
+
+    /** @return array<string, mixed> */
+    private function declarativeConfig(string $driver): array
+    {
+        return [
+            'default' => 'main',
+            'connections' => [
+                'main' => [
+                    'driver' => $driver,
+                    'dsn' => null,
+                    'database' => $driver === 'sqlite' ? 'runtime/storage/app.sqlite' : 'app',
+                    'host' => '127.0.0.1',
+                    'port' => null,
+                    'username' => null,
+                    'password' => null,
+                    'uri' => null,
+                ],
+            ],
+            'migrations_path' => 'runtime/database/migrations',
+            'models_path' => 'src/models',
+            'seeders' => [],
+        ];
     }
 
     private function writeNew(string $relative, string $content): string

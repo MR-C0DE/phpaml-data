@@ -16,7 +16,7 @@ final class MySqlDialect extends AbstractDialect
     {
         return match ($type) {
             'string' => 'VARCHAR(' . $this->length($length) . ')',
-            'text' => 'TEXT', 'integer' => 'BIGINT', 'boolean' => 'TINYINT(1)', 'datetime' => 'DATETIME',
+            'text' => 'TEXT', 'integer' => 'BIGINT', 'boolean' => 'TINYINT(1)', 'decimal' => 'DECIMAL(10,2)', 'datetime' => 'DATETIME',
             default => throw new InvalidArgumentException("Type inconnu : {$type}"),
         };
     }
