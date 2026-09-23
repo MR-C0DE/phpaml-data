@@ -26,6 +26,7 @@ final readonly class EntityMetadata
         public string $table,
         public array $properties,
         public string $key,
+        /** @var ReflectionClass<T> */
         private ReflectionClass $reflection,
         public array $relations,
     ) {
@@ -38,7 +39,7 @@ final readonly class EntityMetadata
      */
     public static function from(string $class): self
     {
-        /** @var array<class-string<Entity>, self<Entity>> $cache */
+        /** @var array<class-string<E>, self<E>> $cache */
         static $cache = [];
         if (isset($cache[$class])) {
             return $cache[$class];
@@ -46,6 +47,7 @@ final readonly class EntityMetadata
         if (!is_subclass_of($class, Entity::class)) {
             throw new InvalidArgumentException("{$class} doit étendre " . Entity::class . '.');
         }
+        /** @var ReflectionClass<E> $reflection */
         $reflection = new ReflectionClass($class);
         $tableAttribute = $reflection->getAttributes(Table::class)[0] ?? null;
         $table = $tableAttribute ? $tableAttribute->newInstance()->name : self::snake($reflection->getShortName()) . 's';
@@ -78,7 +80,8 @@ final readonly class EntityMetadata
         if ($properties === [] || $key === null) {
             throw new InvalidArgumentException("L'entité {$class} doit exposer une clé publique #[Key] ou nommée id.");
         }
-        return $cache[$class] = new self(
+        /** @var self<E> $metadata */
+        $metadata = new self(
             $class,
             self::identifier($table),
             $properties,
@@ -86,6 +89,8 @@ final readonly class EntityMetadata
             $reflection,
             $relations,
         );
+        $cache[$class] = $metadata;
+        return $metadata;
     }
 
     /**
@@ -94,6 +99,7 @@ final readonly class EntityMetadata
      */
     public function hydrate(array $row): Entity
     {
+        /** @var T $entity */
         $entity = $this->reflection->newInstanceWithoutConstructor();
         foreach ($this->properties as $column => $property) {
             if (array_key_exists($column, $row)) {

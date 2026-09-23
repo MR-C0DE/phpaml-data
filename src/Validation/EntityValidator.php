@@ -12,6 +12,7 @@ final class EntityValidator
 {
     public function validate(Entity $entity): void
     {
+        /** @var array<string, list<string>> $errors */
         $errors = [];
         foreach ($this->plan($entity::class) as [$property, $required, $email, $length]) {
             $initialized = $property->isInitialized($entity);
@@ -41,10 +42,13 @@ final class EntityValidator
         }
     }
 
-    /** @param class-string<Entity> $class @return list<array{ReflectionProperty, list<Required>, list<Email>, list<Length>}> */
+    /**
+     * @param class-string<Entity> $class
+     * @return list<array{0: ReflectionProperty, 1: list<Required>, 2: list<Email>, 3: list<Length>}>
+     */
     private function plan(string $class): array
     {
-        /** @var array<class-string<Entity>, list<array{ReflectionProperty, list<Required>, list<Email>, list<Length>}>> $cache */
+        /** @var array<class-string<Entity>, list<array{0: ReflectionProperty, 1: list<Required>, 2: list<Email>, 3: list<Length>}>> $cache */
         static $cache = [];
         if (isset($cache[$class])) {
             return $cache[$class];
@@ -53,11 +57,22 @@ final class EntityValidator
         $plan = [];
         foreach ((new ReflectionClass($class))->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             if ($property->isStatic()) continue;
-            $instantiate = static fn (string $attribute): array => array_map(
-                static fn (\ReflectionAttribute $definition): object => $definition->newInstance(),
-                $property->getAttributes($attribute),
+            /** @var list<Required> $required */
+            $required = array_map(
+                static fn (\ReflectionAttribute $definition): Required => $definition->newInstance(),
+                $property->getAttributes(Required::class),
             );
-            $plan[] = [$property, $instantiate(Required::class), $instantiate(Email::class), $instantiate(Length::class)];
+            /** @var list<Email> $email */
+            $email = array_map(
+                static fn (\ReflectionAttribute $definition): Email => $definition->newInstance(),
+                $property->getAttributes(Email::class),
+            );
+            /** @var list<Length> $length */
+            $length = array_map(
+                static fn (\ReflectionAttribute $definition): Length => $definition->newInstance(),
+                $property->getAttributes(Length::class),
+            );
+            $plan[] = [$property, $required, $email, $length];
         }
         return $cache[$class] = $plan;
     }

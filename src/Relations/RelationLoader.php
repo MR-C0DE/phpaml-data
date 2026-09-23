@@ -43,7 +43,6 @@ final readonly class RelationLoader
             $this->loadHasOne($entities, $metadata, $property, $rule);
             return;
         }
-        if (!$rule instanceof BelongsToMany) throw new InvalidArgumentException("Relation invalide : {$relation}");
         $this->loadManyToMany($entities, $metadata, $property, $rule);
     }
 
