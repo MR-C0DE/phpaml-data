@@ -11,6 +11,7 @@ use AML\Data\Diagnostics\QueryLogger;
 use AML\Data\Entity;
 use AML\Data\Metadata\Key;
 use AML\Data\Metadata\Table;
+use AML\Data\Metadata\EntityMetadata;
 use AML\Data\Migrations\Migration;
 use AML\Data\Migrations\Migrator;
 use AML\Data\Seeding\Seeder;
@@ -117,6 +118,16 @@ $test('CRUD typé, requêtes chaînables et pagination SQLite', function () use 
     $context->users()->remove($ada);
     $expect($context->users()->count() === 2, 'La suppression a échoué.');
     $expect(count($logger->queries) >= 8 && $logger->queries[0]->durationMilliseconds >= 0, 'Le diagnostic des requêtes est absent.');
+});
+
+$test("les métadonnées d'entité sont compilées une seule fois", function () use ($expect): void {
+    $first = EntityMetadata::from(User::class);
+    $second = EntityMetadata::from(User::class);
+    $expect($first === $second, "Les métadonnées immuables devraient être réutilisées dans le processus.");
+    $user = $first->hydrate(['id' => 7, 'name' => 'Cached', 'email' => 'cached@example.test']);
+    $expect($user instanceof User && $user->id === 7, "Le cache ne doit pas modifier l'hydratation.");
+    $expect(isset($first->relations['posts'], $first->relations['profile'], $first->relations['roles']), 'Les relations doivent faire partie du plan compilé.');
+    $expect($first->relations['posts']['rule'] === $second->relations['posts']['rule'], 'Une règle de relation immuable ne doit pas être reconstruite.');
 });
 
 $test("l'identifiant SQL explicite reste identique dans l'objet et la base", function () use ($expect): void {

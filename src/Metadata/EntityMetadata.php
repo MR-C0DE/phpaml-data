@@ -19,12 +19,15 @@ final readonly class EntityMetadata
     /**
      * @param class-string<T> $class
      * @param array<string, ReflectionProperty> $properties
+     * @param array<string, array{property: ReflectionProperty, rule: BelongsTo|HasMany|HasOne|BelongsToMany}> $relations
      */
     private function __construct(
         public string $class,
         public string $table,
         public array $properties,
         public string $key,
+        private ReflectionClass $reflection,
+        public array $relations,
     ) {
     }
 
@@ -35,6 +38,11 @@ final readonly class EntityMetadata
      */
     public static function from(string $class): self
     {
+        /** @var array<class-string<Entity>, self<Entity>> $cache */
+        static $cache = [];
+        if (isset($cache[$class])) {
+            return $cache[$class];
+        }
         if (!is_subclass_of($class, Entity::class)) {
             throw new InvalidArgumentException("{$class} doit étendre " . Entity::class . '.');
         }
@@ -42,15 +50,22 @@ final readonly class EntityMetadata
         $tableAttribute = $reflection->getAttributes(Table::class)[0] ?? null;
         $table = $tableAttribute ? $tableAttribute->newInstance()->name : self::snake($reflection->getShortName()) . 's';
         $properties = [];
+        $relations = [];
         $key = null;
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             if ($property->isStatic()) {
                 continue;
             }
-            if ($property->getAttributes(BelongsTo::class) !== []
-                || $property->getAttributes(HasMany::class) !== []
-                || $property->getAttributes(HasOne::class) !== []
-                || $property->getAttributes(BelongsToMany::class) !== []) {
+            $relationAttribute = $property->getAttributes(BelongsTo::class)[0]
+                ?? $property->getAttributes(HasMany::class)[0]
+                ?? $property->getAttributes(HasOne::class)[0]
+                ?? $property->getAttributes(BelongsToMany::class)[0]
+                ?? null;
+            if ($relationAttribute !== null) {
+                $relations[$property->getName()] = [
+                    'property' => $property,
+                    'rule' => $relationAttribute->newInstance(),
+                ];
                 continue;
             }
             $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
@@ -63,7 +78,14 @@ final readonly class EntityMetadata
         if ($properties === [] || $key === null) {
             throw new InvalidArgumentException("L'entité {$class} doit exposer une clé publique #[Key] ou nommée id.");
         }
-        return new self($class, self::identifier($table), $properties, self::identifier($key));
+        return $cache[$class] = new self(
+            $class,
+            self::identifier($table),
+            $properties,
+            self::identifier($key),
+            $reflection,
+            $relations,
+        );
     }
 
     /**
@@ -72,7 +94,7 @@ final readonly class EntityMetadata
      */
     public function hydrate(array $row): Entity
     {
-        $entity = (new ReflectionClass($this->class))->newInstanceWithoutConstructor();
+        $entity = $this->reflection->newInstanceWithoutConstructor();
         foreach ($this->properties as $column => $property) {
             if (array_key_exists($column, $row)) {
                 $property->setValue($entity, $row[$column]);

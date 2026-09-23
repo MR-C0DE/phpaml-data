@@ -8,7 +8,6 @@ use AML\Data\Connection;
 use AML\Data\Entity;
 use AML\Data\Metadata\EntityMetadata;
 use InvalidArgumentException;
-use ReflectionClass;
 
 final readonly class ManyToManyRelation
 {
@@ -20,18 +19,17 @@ final readonly class ManyToManyRelation
         Entity $entity,
         string $relation,
     ) {
-        $property = (new ReflectionClass($entity))->getProperty($relation);
-        $attribute = $property->getAttributes(BelongsToMany::class)[0] ?? null;
-        if ($attribute === null) {
+        $metadata = EntityMetadata::from($entity::class);
+        $definition = $metadata->relations[$relation] ?? null;
+        if ($definition === null || !$definition['rule'] instanceof BelongsToMany) {
             throw new InvalidArgumentException("{$relation} n'est pas une relation many-to-many.");
         }
-        $this->rule = $attribute->newInstance();
+        $this->rule = $definition['rule'];
         foreach ([$this->rule->pivotTable, $this->rule->pivotLocalKey, $this->rule->pivotTargetKey] as $identifier) {
             if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $identifier)) {
                 throw new InvalidArgumentException("Identifiant pivot invalide : {$identifier}");
             }
         }
-        $metadata = EntityMetadata::from($entity::class);
         $localProperty = $metadata->properties[$this->rule->localKey] ?? throw new InvalidArgumentException("Clé locale inconnue : {$this->rule->localKey}");
         if (!$localProperty->isInitialized($entity)) {
             throw new InvalidArgumentException("L'entité doit être persistée avant de modifier {$relation}.");

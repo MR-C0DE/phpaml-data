@@ -9,7 +9,6 @@ use AML\Data\DbSet;
 use AML\Data\Entity;
 use AML\Data\Metadata\EntityMetadata;
 use InvalidArgumentException;
-use ReflectionClass;
 
 final readonly class RelationLoader
 {
@@ -26,29 +25,26 @@ final readonly class RelationLoader
         if ($entities === []) {
             return;
         }
-        $property = (new ReflectionClass($metadata->class))->getProperty($relation);
-        $belongsTo = $property->getAttributes(BelongsTo::class)[0] ?? null;
-        $hasMany = $property->getAttributes(HasMany::class)[0] ?? null;
-        $hasOne = $property->getAttributes(HasOne::class)[0] ?? null;
-        $manyToMany = $property->getAttributes(BelongsToMany::class)[0] ?? null;
-        if ($belongsTo === null && $hasMany === null && $hasOne === null && $manyToMany === null) {
+        $definition = $metadata->relations[$relation] ?? null;
+        if ($definition === null) {
             throw new InvalidArgumentException("{$relation} n'est pas une relation de {$metadata->class}.");
         }
-        if ($belongsTo !== null) {
-            $rule = $belongsTo->newInstance();
+        $property = $definition['property'];
+        $rule = $definition['rule'];
+        if ($rule instanceof BelongsTo) {
             $this->loadBelongsTo($entities, $metadata, $property, $rule);
             return;
         }
-        if ($hasMany !== null) {
-            $this->loadHasMany($entities, $metadata, $property, $hasMany->newInstance());
+        if ($rule instanceof HasMany) {
+            $this->loadHasMany($entities, $metadata, $property, $rule);
             return;
         }
-        if ($hasOne !== null) {
-            $this->loadHasOne($entities, $metadata, $property, $hasOne->newInstance());
+        if ($rule instanceof HasOne) {
+            $this->loadHasOne($entities, $metadata, $property, $rule);
             return;
         }
-        if ($manyToMany === null) throw new InvalidArgumentException("Relation invalide : {$relation}");
-        $this->loadManyToMany($entities, $metadata, $property, $manyToMany->newInstance());
+        if (!$rule instanceof BelongsToMany) throw new InvalidArgumentException("Relation invalide : {$relation}");
+        $this->loadManyToMany($entities, $metadata, $property, $rule);
     }
 
     /**
