@@ -5,8 +5,9 @@ QA_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 DATA_DIR=$(CDPATH= cd -- "$QA_DIR/.." && pwd)
 MONGO_DIR=${PHPAML_DATA_MONGODB_DIR:-"$DATA_DIR/../phpaml-data-mongodb"}
 
-docker compose -f "$QA_DIR/compose.yml" up -d --wait
+docker compose -f "$QA_DIR/compose.yml" up -d --wait mysql mariadb postgres mongodb
 trap 'docker compose -f "$QA_DIR/compose.yml" down -v' EXIT INT TERM
+docker compose -f "$QA_DIR/compose.yml" run --rm mongodb-init
 
 wait_for_port() {
     port=$1
