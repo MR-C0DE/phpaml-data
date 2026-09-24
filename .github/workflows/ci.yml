@@ -22,3 +22,25 @@ jobs:
       - run: composer test
       - run: php tests/projects.php
       - run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+
+  databases:
+    name: MySQL, MariaDB, PostgreSQL and MongoDB
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: MR-C0DE/phpaml-data-mongodb
+          path: .integration/phpaml-data-mongodb
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, pdo_pgsql, mongodb
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: .integration/phpaml-data-mongodb
+      - name: Run the real database matrix
+        env:
+          PHPAML_DATA_MONGODB_DIR: ${{ github.workspace }}/.integration/phpaml-data-mongodb
+        run: sh qa/run-matrix.sh

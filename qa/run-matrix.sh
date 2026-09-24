@@ -3,7 +3,7 @@ set -eu
 
 QA_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 DATA_DIR=$(CDPATH= cd -- "$QA_DIR/.." && pwd)
-MONGO_DIR=$(CDPATH= cd -- "$DATA_DIR/../phpaml-data-mongodb" && pwd)
+MONGO_DIR=${PHPAML_DATA_MONGODB_DIR:-"$DATA_DIR/../phpaml-data-mongodb"}
 
 docker compose -f "$QA_DIR/compose.yml" up -d --wait
 trap 'docker compose -f "$QA_DIR/compose.yml" down -v' EXIT INT TERM
